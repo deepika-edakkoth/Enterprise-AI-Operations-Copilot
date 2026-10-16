@@ -1,0 +1,13 @@
+langchain 
+langgraph 
+langsmith
+langchain-openai 
+langchain-mcp-adapters 
+langchain_azure_cosmosdb
+langchain-azure-dynamic-sessions
+azure.cosmos
+
+markdownify
+ipython
+fastapi
+uvicorn

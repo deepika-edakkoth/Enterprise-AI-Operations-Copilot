@@ -1,0 +1,21 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+
+# VS Code
+.vscode/
+
+# Environment variables
+.env
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.exe
+terraform
+LICENSE.txt
