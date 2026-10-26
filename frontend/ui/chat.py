@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import config
 from ui.style_loader import load_css
+from components.review_card import render_approval_card
 
 def render_chat():
 
@@ -26,6 +27,19 @@ def render_chat():
                 f'</div></div>',
                 unsafe_allow_html=True
             )
+        elif msg["role"] == "approval":
+            
+            # Hide the card once approved or rejected.
+            if msg.get("resolved", False):
+                continue
+
+            with st.chat_message("assistant"):
+                st.markdown(msg.get("content", ""))
+                if msg.get("ticket"):
+                    render_approval_card(
+                        msg
+                    )
+                    continue
 
         else:
             with st.chat_message("assistant"):
@@ -35,21 +49,24 @@ def render_chat():
         "Ask a question..."
     )
 
+    if not prompt:
+        return
+    
     if prompt:
 
-        # Create a conversation(thread id) only once per chat session
-        if "thread_id" not in st.session_state:
+         # Create a new conversation only when required.
+        if not st.session_state.get("supervisor_thread_id"):
             try:
                 chat_id_response = requests.post(
-                    f"{config.API_BASE_URL}conversation",
+                    f"{config.API_BASE_URL}/conversation",
                     timeout=30
                 )
 
                 chat_id_response.raise_for_status()
                 
                 data = chat_id_response.json()
-                thread_id = data["thread_id"]
-                st.session_state.thread_id = thread_id
+                supervisor_thread_id = data["supervisor_thread_id"]
+                st.session_state.supervisor_thread_id = supervisor_thread_id
 
             except requests.RequestException as e:
                 st.error(f"Could not create conversation: {e}")
@@ -76,10 +93,10 @@ def render_chat():
         try:
             with st.spinner("AI agent is thinking..."):
                 response = requests.post(
-                    f"{config.API_BASE_URL}chat",
+                    f"{config.API_BASE_URL}/chat",
                     json={
                         "query": prompt,
-                        "thread_id": st.session_state.thread_id
+                        "supervisor_thread_id": st.session_state.supervisor_thread_id
                     },
                     timeout=120
                 )
@@ -87,14 +104,36 @@ def render_chat():
                 response.raise_for_status()
 
                 data = response.json()
-                answer = data["ai_response"]
+
+                #st.session_state.thread_id = data["thread_id"]
+                if data["status"] == "pending_approval":
+                    approval_message = {
+                        "role": "approval",
+                        "content": data["message"],
+                        "thread_id": data["supervisor_thread_id"],
+                        "ticket": data["ticket"],
+                        "ticket_draft_id": data["ticket"]["ticket_draft_id"],
+                        "resolved": False,
+                    }
+                    st.session_state.pending_approval = approval_message
+                    st.session_state.setdefault("messages", []).append(approval_message)
+                    
+                    #render_approval_card(st.session_state["pending_approval"], config.API_BASE_URL)
+                    st.rerun()
+
+                elif data["status"] == "completed":
+                    st.session_state.setdefault("messages", []).append({
+                        "role": "assistant",
+                        "content": data["message"],
+                    })
+                #answer = data["ai_response"]
                 #answer = response.json()["ai_response"]
 
             # IMPORTANT: Save the assistant response
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": answer
-            })
+            #st.session_state.messages.append({
+                #"role": "assistant",
+                #"content": answer
+            #})
 
             # Refresh to render both messages from chat history
             st.rerun()

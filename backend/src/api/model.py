@@ -1,12 +1,17 @@
 from pydantic import BaseModel
 
 class ChatRequest(BaseModel):
-    thread_id: str
+    supervisor_thread_id: str
     query: str
 
 class ChatResponse(BaseModel):
-    ai_response: str
-
+    status: str
+    supervisor_thread_id: str
+    ticket: dict | None = None
+    message: str
 
 class ConversationResponse(BaseModel):
-    thread_id: str
+    supervisor_thread_id: str
+
+class RejectRequest(BaseModel):
+    reason: str = ""

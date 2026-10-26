@@ -3,7 +3,7 @@ from agents import registry
 
 async def run_supervisor(
     user_query: str,
-    thread_id: str
+    supervisor_thread_id: str
 ):
     supervisor_agent = registry.supervisor_agent
 
@@ -12,11 +12,11 @@ async def run_supervisor(
             "Supervisor agent is not initialized. "
         )
 
-    print(f"Running supervisor agent with query: {user_query} and thread_id: {thread_id}")
+    print(f"Running supervisor agent with query: {user_query} and thread_id: {supervisor_thread_id}")
     
     config = {
         "configurable": {
-            "thread_id": thread_id
+            "thread_id": supervisor_thread_id
         }
     }
 
@@ -28,12 +28,11 @@ async def run_supervisor(
         },
         config=config
     )
-
+    
     for msg in response["messages"]:
         msg.pretty_print()
 
-    final_response = response["messages"][-1].content
+    #print (f"Type of response is: {type(response)}")
+    #final_response = response["messages"][-1].content
 
-    print (f"Supervisor agent final response: {final_response}")
-
-    return final_response
+    return response

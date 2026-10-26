@@ -7,4 +7,7 @@ from agents.registry import hr_agent
 @traceable
 async def call_hr_agent(query: str):
     result = await hr_agent.ainvoke({"messages": [{"role": "user", "content": query}]})
-    return result["messages"][-1].content
+    return {
+        "status": "success",
+        "response": result["messages"][-1].content
+    }

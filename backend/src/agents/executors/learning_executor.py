@@ -8,4 +8,7 @@ from agents import registry
 async def call_learn_agent(query: str):
     print (f"Calling Learning Agent with query: {query}")
     result = await registry.learning_agent.ainvoke({"messages": [{"role": "user", "content": query}]})
-    return result["messages"][-1].content
+    return {
+        "status": "success",
+        "response": result["messages"][-1].content
+    }
